@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>路域智维 - 病害采集</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 24px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .server-config {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      border: 2px solid #e9ecef;
+    }
+    .server-config h3 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .server-config input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .server-config button {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .server-config .help {
+      margin-top: 12px;
+      padding: 12px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #1976d2;
+      line-height: 1.6;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .photo-section {
+      margin: 20px 0;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .photo-item {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      background: #f5f5f5;
+    }
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .photo-item .remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: rgba(255,0,0,0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .add-photo {
+      aspect-ratio: 1;
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #666;
+      font-size: 14px;
+    }
+    .add-photo input {
+      display: none;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      z-index: 1000;
+      display: none;
+    }
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff3cd;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+      color: #856404;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛣️ 路域智维</h1>
+    <p class="subtitle">公路病害采集系统</p>
+
+    <!-- 服务器配置 -->
+    <div class="server-config">
+      <h3>🔧 服务器配置</h3>
+      <input type="text" id="serverUrl" placeholder="http://192.168.1.100:3003/api/write-record">
+      <button onclick="saveServer()">保存配置</button>
+      <div class="help">
+        <strong>如何获取服务器地址：</strong><br>
+        1. 在电脑上运行服务器<br>
+        2. 查看控制台输出的 IP 地址<br>
+        3. 格式：http://IP:3003/api/write-record
+      </div>
+    </div>
+
+    <!-- 表单 -->
+    <div class="form-group">
+      <label>路线 *</label>
+      <select id="route">
+        <option value="">请选择</option>
+        <option value="G18">G18</option>
+        <option value="S17">S17</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>方向 *</label>
+      <select id="direction">
+        <option value="">请选择</option>
+        <option value="上行">上行</option>
+        <option value="下行">下行</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>起点桩号 *</label>
+      <input type="text" id="startStation" placeholder="如：K100+500">
+    </div>
+
+    <div class="form-group">
+      <label>病害类型 *</label>
+      <select id="diseaseType">
+        <option value="">请选择</option>
+        <option value="点状">点状</option>
+        <option value="线状">线状</option>
+        <option value="面状">面状</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>病害描述</label>
+      <textarea id="diseaseDesc" rows="3" placeholder="描述病害情况..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>工程量预估</label>
+      <input type="text" id="estimatedQty" placeholder="预估工程量">
+    </div>
+
+    <div class="form-group">
+      <label>备注</label>
+      <input type="text" id="notes" placeholder="其他备注信息">
+    </div>
+
+    <!-- 拍照 -->
+    <div class="photo-section">
+      <label>拍照（最多5张）</label>
+      <div class="photo-grid" id="photoGrid">
+        <div class="add-photo" onclick="document.getElementById('photoInput').click()">
+          <span>📷</span>
+          <span>添加照片</span>
+          <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhoto(event)">
+        </div>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submit()">提交</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let photos = [];
+    let serverUrl = localStorage.getItem('serverUrl') || '';
+
+    if (serverUrl) {
+      document.getElementById('serverUrl').value = serverUrl;
+    }
+
+    function saveServer() {
+      const url = document.getElementById('serverUrl').value.trim();
+      if (!url) {
+        showToast('请输入服务器地址');
+        return;
+      }
+      serverUrl = url;
+      localStorage.setItem('serverUrl', serverUrl);
+      showToast('服务器配置已保存');
+    }
+
+    function handlePhoto(event) {
+      const files = Array.from(event.target.files);
+      if (photos.length + files.length > 5) {
+        showToast('最多5张照片');
+        return;
+      }
+
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          photos.push(e.target.result);
+          renderPhotos();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderPhotos() {
+      const grid = document.getElementById('photoGrid');
+      grid.innerHTML = '';
+
+      photos.forEach((photo, index) => {
+        const item = document.createElement('div');
+        item.className = 'photo-item';
+        item.innerHTML = `
+          <img src="${photo}">
+          <button class="remove" onclick="removePhoto(${index})">×</button>
+        `;
+        grid.appendChild(item);
+      });
+
+      if (photos.length < 5) {
+        const addBtn = document.createElement('div');
+        addBtn.className = 'add-photo';
+        addBtn.onclick = () => document.getElementById('photoInput').click();
+        addBtn.innerHTML = '<span>📷</span><span>添加照片</span>';
+        grid.appendChild(addBtn);
+      }
+    }
+
+    function removePhoto(index) {
+      photos.splice(index, 1);
+      renderPhotos();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    async function submit() {
+      if (!serverUrl) {
+        showToast('请先配置服务器地址');
+        return;
+      }
+
+      const route = document.getElementById('route').value;
+      const direction = document.getElementById('direction').value;
+      const startStation = document.getElementById('startStation').value;
+      const diseaseType = document.getElementById('diseaseType').value;
+
+      if (!route || !direction || !startStation || !diseaseType) {
+        showToast('请填写必填项');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '提交中...';
+
+      const data = {
+        route,
+        direction,
+        start_station: startStation,
+        end_station: '',
+        disease_type: diseaseType,
+        disease_desc: document.getElementById('diseaseDesc').value,
+        estimated_qty: document.getElementById('estimatedQty').value,
+        notes: document.getElementById('notes').value,
+        photos: photos,
+        reporter: '手机用户',
+        record_time: new Date().toISOString()
+      };
+
+      try {
+        const response = await fetch(serverUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': 'luyu2024'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast('✅ 提交成功！');
+          // 重置表单
+          photos = [];
+          renderPhotos();
+          document.getElementById('startStation').value = '';
+          document.getElementById('diseaseDesc').value = '';
+          document.getElementById('estimatedQty').value = '';
+          document.getElementById('notes').value = '';
+        } else {
+          showToast('❌ ' + result.message);
+        }
+      } catch (error) {
+        showToast('❌ 网络错误：' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '提交';
+      }
+    }
+  </script>
+</body>
+</html>
